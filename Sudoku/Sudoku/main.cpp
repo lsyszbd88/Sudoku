@@ -84,7 +84,7 @@ void generateSudoku(std::string filename, int count) {
             firstRow[j] = j + 1;
         }
         std::shuffle(firstRow.begin(), firstRow.end(), gen);
-       
+
         // 根据偏移值生成剩余行
         int offset[9] = { 0, 6, 6, 5, 6, 6, 5, 6, 6 };
         for (int row = 0; row < SIZE; ++row) {
@@ -112,10 +112,8 @@ void generateSudoku(std::string filename, int count) {
     file.close();
 }
 
-
-
 // 生成数独游戏
-void generateSudokuGames(std::string filename, int gameCount) {
+void generateSudokuGames(std::string filename, int gameCount, int minHoles, int maxHoles) {
     std::ofstream file(filename);
     if (!file.is_open()) {
         std::cout << "Error opening file: " << filename << std::endl;
@@ -150,7 +148,7 @@ void generateSudokuGames(std::string filename, int gameCount) {
                 solution[row][col] = num;
                 game[row][col] = num;
                 col++;
-                
+
             }
             row++;
         }
@@ -158,12 +156,10 @@ void generateSudokuGames(std::string filename, int gameCount) {
         solutionFile.close();
 
         // 生成数独游戏
-        int emptyCount = std::uniform_int_distribution<>(30, 50)(gen);  // 随机挖去的空格数量
-        //int emptyCount = 5;
+        int emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);  // 随机挖去的空格数量
         while (emptyCount > 0) {
             int row = std::uniform_int_distribution<>(0, SIZE - 1)(gen);
             int col = std::uniform_int_distribution<>(0, SIZE - 1)(gen);
-            cout << row << " " << col << " " << game[row][col] << endl;
             if (game[row][col] != EMPTY) {
                 game[row][col] = EMPTY;
                 emptyCount--;
@@ -192,29 +188,52 @@ void generateSudokuGames(std::string filename, int gameCount) {
             }
             file << std::endl;
         }
+        file << std::endl;
 
         file.close();
     }
+
+    file.close();
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 3) {
-        std::cout << "Usage: sudoku.exe -c <count> | -n <gameCount>" << std::endl;
-        return 0;
+    int sudokuCount = 0;
+    int gameCount = 0;
+    int minHoles = 20;
+    int maxHoles = 55;
+
+    for (int i = 1; i < argc; i += 2) {
+        std::string arg(argv[i]);
+        if (arg == "-c") {
+            sudokuCount = std::stoi(argv[i + 1]);
+        }
+        else if (arg == "-n") {
+            gameCount = std::stoi(argv[i + 1]);
+        }
+        else if (arg == "-r") {
+            std::string range = argv[i + 1];
+            std::stringstream ss(range);
+            std::string minHolesStr, maxHolesStr;
+            std::getline(ss, minHolesStr, '~');
+            std::getline(ss, maxHolesStr);
+            minHoles = std::stoi(minHolesStr);
+            maxHoles = std::stoi(maxHolesStr);
+        }
     }
 
-    std::string mode = argv[1];
-
-    if (mode == "-c") {
-        int count = std::stoi(argv[2]);
-        generateSudoku("sudoku.txt", count);
+    if (sudokuCount > 0) {
+        generateSudoku("sudokus.txt", sudokuCount);
     }
-    else if (mode == "-n") {
-        int gameCount = std::stoi(argv[2]);
-        generateSudokuGames("sudoku_games.txt", gameCount);
+    else if (gameCount > 0) {
+        if (minHoles >= 20 && maxHoles <= 55 && minHoles <= maxHoles) {
+            generateSudokuGames("games.txt", gameCount, minHoles, maxHoles);
+        }
+        else {
+            std::cout << "Error: Hole range should be between 20 and 55." << std::endl;
+        }
     }
     else {
-        std::cout << "Invalid mode." << std::endl;
+        std::cout << "Invalid arguments." << std::endl;
     }
 
     return 0;
