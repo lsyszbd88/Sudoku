@@ -112,6 +112,109 @@ void generateSudoku(std::string filename, int count) {
     file.close();
 }
 
+bool hasUniqueSolution(const std::vector<std::vector<int>>& board) {
+    // 创建一个副本
+    std::vector<std::vector<int>> gameCopy = board;
+
+    // 使用回溯算法求解数独
+    return solveSudoku(gameCopy);
+}
+
+void generateUniqueSudoku(std::string filename, int gameCount) {
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        std::cout << "Error opening file: " << filename << std::endl;
+        return;
+    }
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    // 根据难度和空格数量限制计算空格数量
+   
+    for (int i = 0; i < gameCount; ++i) {
+        int emptyCount = std::uniform_int_distribution<>(20, 55)(gen);
+        std::vector<std::vector<int>> solution(SIZE, std::vector<int>(SIZE, EMPTY));
+        std::vector<std::vector<int>> game(SIZE, std::vector<int>(SIZE, EMPTY));
+
+        // 生成数独终局
+        generateSudoku("temp_solution.txt", 1);
+
+        // 读取数独终局
+        std::ifstream solutionFile("temp_solution.txt");
+        if (!solutionFile.is_open()) {
+            std::cout << "Error opening solution file." << std::endl;
+            file.close();
+            return;
+        }
+
+        // 解析数独终局
+        std::string line;
+        int row = 0;
+        while (std::getline(solutionFile, line)) {
+            std::stringstream ss(line);
+            int num;
+            int col = 0;
+            while (ss >> num) {
+                solution[row][col] = num;
+                game[row][col] = num;
+                col++;
+            }
+            row++;
+        }
+
+        solutionFile.close();
+
+        // 随机挖去空格
+        while (emptyCount > 0) {
+            int row = std::uniform_int_distribution<>(0, SIZE - 1)(gen);
+            int col = std::uniform_int_distribution<>(0, SIZE - 1)(gen);
+            if (game[row][col] != EMPTY) {
+                // 暂时移除数字
+                int temp = game[row][col];
+                game[row][col] = EMPTY;
+
+                // 检查是否有唯一解
+                if (!hasUniqueSolution(game)) {
+                    // 不唯一解，恢复数字
+                    game[row][col] = temp;
+                    continue;
+                }
+                emptyCount--;
+            }
+            else {
+                continue; // 当前格子已经为空，继续选择新的格子
+            }
+        }
+
+        std::string gameFilename = "games_u" + std::to_string(i) + ".txt";
+        std::ofstream file(gameFilename);
+        if (!file.is_open()) {
+            std::cout << "Error opening file: " << gameFilename << std::endl;
+            return;
+        }
+
+        // 打印数独游戏到文件
+        for (int row = 0; row < SIZE; ++row) {
+            for (int col = 0; col < SIZE; ++col) {
+                if (game[row][col] == EMPTY) {
+                    file << EMPTY_CHAR << " ";
+                }
+                else {
+                    file << game[row][col] << " ";
+                }
+            }
+            file << std::endl;
+        }
+        file << std::endl;
+
+        file.close();
+    }
+
+    file.close();
+}
+
+
 // 生成数独游戏
 void generateSudokuGames(std::string filename, int gameCount, int minHoles, int maxHoles, int difficulty) {
     std::ofstream file(filename);
@@ -232,6 +335,7 @@ int main(int argc, char* argv[]) {
     bool hasN = false;
     bool hasR = false;
     bool hasM = false;
+    bool hasU = false;
 
     for (int i = 1; i < argc; i += 2) {
         std::string arg(argv[i]);
@@ -256,10 +360,13 @@ int main(int argc, char* argv[]) {
             difficulty = std::stoi(argv[i + 1]);
             hasM = true;
         }
+        else if (arg == "-u") {
+            hasU = true;
+        }
     }
 
     if (gameCount > 0) {
-        if (!hasN || (hasR && hasM)) {
+        if (!hasN || (hasR && hasM)||(hasR && hasU)|| hasU && hasM) {
             std::cout << "Error: Invalid arguments." << std::endl;
             return 0;
         }
@@ -280,15 +387,17 @@ int main(int argc, char* argv[]) {
                 return 0;
             }
         }
-
-        generateSudokuGames("games.txt", gameCount, minHoles, maxHoles, difficulty);
+        if (hasU)
+            generateUniqueSudoku("games.txt", gameCount);
+        else
+            generateSudokuGames("games.txt", gameCount, minHoles, maxHoles, difficulty);
     }
     else if (sudokuCount > 0) {
-        if (hasR || hasM) {
+        if (hasR || hasM || hasU) {
             std::cout << "Error: Invalid arguments." << std::endl;
             return 0;
         }
-
+        
         generateSudoku("sudokus.txt", sudokuCount);
     }
     else {
