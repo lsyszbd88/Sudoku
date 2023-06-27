@@ -113,7 +113,7 @@ void generateSudoku(std::string filename, int count) {
 }
 
 // 生成数独游戏
-void generateSudokuGames(std::string filename, int gameCount, int minHoles, int maxHoles) {
+void generateSudokuGames(std::string filename, int gameCount, int minHoles, int maxHoles, int difficulty) {
     std::ofstream file(filename);
     if (!file.is_open()) {
         std::cout << "Error opening file: " << filename << std::endl;
@@ -122,7 +122,32 @@ void generateSudokuGames(std::string filename, int gameCount, int minHoles, int 
 
     std::random_device rd;
     std::mt19937 gen(rd());
-
+    int emptyCount;
+    if (difficulty == 0) {
+        if (minHoles == 0) {
+            minHoles = 20;
+            maxHoles = 55;
+            emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
+        }
+        else
+            emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
+    }
+    else {
+        if (minHoles == 0) {
+            switch (difficulty)
+            {
+            case 1:minHoles = 20; maxHoles = 34; break;
+            case 2:minHoles = 35; maxHoles = 49; break;
+            case 3:minHoles = 50; maxHoles = 55; break;
+            }
+            emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
+        }
+        else {
+            cout << minHoles << endl;
+            std::cout << "Error: [-m] and [-r] can't appear together." << std::endl;
+            return;
+        }
+    }
     for (int i = 0; i < gameCount; ++i) {
         std::vector<std::vector<int>> solution(SIZE, std::vector<int>(SIZE, EMPTY));
         std::vector<std::vector<int>> game(SIZE, std::vector<int>(SIZE, EMPTY));
@@ -156,6 +181,7 @@ void generateSudokuGames(std::string filename, int gameCount, int minHoles, int 
         solutionFile.close();
 
         // 生成数独游戏
+        
         int emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);  // 随机挖去的空格数量
         while (emptyCount > 0) {
             int row = std::uniform_int_distribution<>(0, SIZE - 1)(gen);
@@ -199,8 +225,13 @@ void generateSudokuGames(std::string filename, int gameCount, int minHoles, int 
 int main(int argc, char* argv[]) {
     int sudokuCount = 0;
     int gameCount = 0;
-    int minHoles = 20;
-    int maxHoles = 55;
+    int minHoles = 0;
+    int maxHoles = 0;
+    int difficulty = 0;
+
+    bool hasN = false;
+    bool hasR = false;
+    bool hasM = false;
 
     for (int i = 1; i < argc; i += 2) {
         std::string arg(argv[i]);
@@ -209,6 +240,7 @@ int main(int argc, char* argv[]) {
         }
         else if (arg == "-n") {
             gameCount = std::stoi(argv[i + 1]);
+            hasN = true;
         }
         else if (arg == "-r") {
             std::string range = argv[i + 1];
@@ -218,19 +250,46 @@ int main(int argc, char* argv[]) {
             std::getline(ss, maxHolesStr);
             minHoles = std::stoi(minHolesStr);
             maxHoles = std::stoi(maxHolesStr);
+            hasR = true;
+        }
+        else if (arg == "-m") {
+            difficulty = std::stoi(argv[i + 1]);
+            hasM = true;
         }
     }
 
-    if (sudokuCount > 0) {
-        generateSudoku("sudokus.txt", sudokuCount);
+    if (gameCount > 0) {
+        if (!hasN || (hasR && hasM)) {
+            std::cout << "Error: Invalid arguments." << std::endl;
+            return 0;
+        }
+
+        if (hasM) {
+            if (difficulty < 1 || difficulty > 3) {
+                std::cout << "Error: Invalid difficulty level." << std::endl;
+                return 0;
+            }
+        }
+        if (hasR) {
+            if (minHoles > maxHoles) {
+                std::cout << "Error: Invalid range for holes." << std::endl;
+                return 0;
+            }
+            if (minHoles < 20 || maxHoles>55) {
+                std::cout << "Error: Invalid range for holes." << std::endl;
+                return 0;
+            }
+        }
+
+        generateSudokuGames("games.txt", gameCount, minHoles, maxHoles, difficulty);
     }
-    else if (gameCount > 0) {
-        if (minHoles >= 20 && maxHoles <= 55 && minHoles <= maxHoles) {
-            generateSudokuGames("games.txt", gameCount, minHoles, maxHoles);
+    else if (sudokuCount > 0) {
+        if (hasR || hasM) {
+            std::cout << "Error: Invalid arguments." << std::endl;
+            return 0;
         }
-        else {
-            std::cout << "Error: Hole range should be between 20 and 55." << std::endl;
-        }
+
+        generateSudoku("sudokus.txt", sudokuCount);
     }
     else {
         std::cout << "Invalid arguments." << std::endl;
