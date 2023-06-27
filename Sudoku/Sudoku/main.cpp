@@ -5,6 +5,8 @@
 #include <ctime>
 #include <string>
 #include <sstream>
+#include <numeric>
+
 
 using namespace std;
 
@@ -63,7 +65,6 @@ bool solveSudoku(std::vector<std::vector<int>>& board) {
     return true;
 }
 
-// 生成数独终局
 void generateSudoku(std::string filename, int count) {
     std::ofstream file(filename);
     if (!file.is_open()) {
@@ -77,28 +78,31 @@ void generateSudoku(std::string filename, int count) {
     for (int i = 0; i < count; ++i) {
         std::vector<std::vector<int>> board(SIZE, std::vector<int>(SIZE, EMPTY));
 
-        // 随机填充第一行
-        std::vector<int> nums(SIZE);
+        // 随机打乱第一行
+        std::vector<int> firstRow(SIZE);
         for (int j = 0; j < SIZE; ++j) {
-            nums[j] = j + 1;
+            firstRow[j] = j + 1;
         }
-        std::shuffle(nums.begin(), nums.end(), gen);
-        for (int j = 0; j < SIZE; ++j) {
-            board[0][j] = nums[j];
+        std::shuffle(firstRow.begin(), firstRow.end(), gen);
+       
+        // 根据偏移值生成剩余行
+        int offset[9] = { 0, 6, 6, 5, 6, 6, 5, 6, 6 };
+        for (int row = 0; row < SIZE; ++row) {
+            std::rotate(firstRow.begin(), firstRow.begin() + offset[row], firstRow.end());
+            for (int col = 0; col < SIZE; ++col) {
+                board[row][col] = firstRow[col];
+            }
         }
 
-        // 求解数独问题
-        solveSudoku(board);
+        // 随机进行行变换
+        std::shuffle(board.begin(), board.begin() + 3, gen);
+        std::shuffle(board.begin() + 3, board.begin() + 6, gen);
+        std::shuffle(board.begin() + 6, board.end(), gen);
 
         // 打印数独终局到文件
         for (int row = 0; row < SIZE; ++row) {
             for (int col = 0; col < SIZE; ++col) {
-                if (board[row][col] == EMPTY) {
-                    file << EMPTY_CHAR << " ";
-                }
-                else {
-                    file << board[row][col] << " ";
-                }
+                file << board[row][col] << " ";
             }
             file << std::endl;
         }
@@ -107,6 +111,8 @@ void generateSudoku(std::string filename, int count) {
 
     file.close();
 }
+
+
 
 // 生成数独游戏
 void generateSudokuGames(std::string filename, int gameCount) {
@@ -167,6 +173,13 @@ void generateSudokuGames(std::string filename, int gameCount) {
             }
         }
 
+        std::string gameFilename = "games" + std::to_string(i) + ".txt";
+        std::ofstream file(gameFilename);
+        if (!file.is_open()) {
+            std::cout << "Error opening file: " << gameFilename << std::endl;
+            return;
+        }
+
         // 打印数独游戏到文件
         for (int row = 0; row < SIZE; ++row) {
             for (int col = 0; col < SIZE; ++col) {
@@ -179,10 +192,9 @@ void generateSudokuGames(std::string filename, int gameCount) {
             }
             file << std::endl;
         }
-        file << std::endl;
-    }
 
-    file.close();
+        file.close();
+    }
 }
 
 int main(int argc, char* argv[]) {
