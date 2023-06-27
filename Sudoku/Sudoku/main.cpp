@@ -167,6 +167,13 @@ void generateSudokuGames(std::string filename, int gameCount) {
             }
         }
 
+        std::string gameFilename = "games" + std::to_string(i) + ".txt";
+        std::ofstream file(gameFilename);
+        if (!file.is_open()) {
+            std::cout << "Error opening file: " << gameFilename << std::endl;
+            return;
+        }
+
         // 打印数独游戏到文件
         for (int row = 0; row < SIZE; ++row) {
             for (int col = 0; col < SIZE; ++col) {
@@ -179,10 +186,9 @@ void generateSudokuGames(std::string filename, int gameCount) {
             }
             file << std::endl;
         }
-        file << std::endl;
-    }
 
-    file.close();
+        file.close();
+    }
 }
 
 int main(int argc, char* argv[]) {
