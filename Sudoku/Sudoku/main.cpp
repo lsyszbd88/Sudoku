@@ -6,6 +6,8 @@
 #include <string>
 #include <sstream>
 
+using namespace std;
+
 const int SIZE = 9;
 const int EMPTY = 0;
 const char EMPTY_CHAR = '$';
@@ -106,72 +108,86 @@ void generateSudoku(std::string filename, int count) {
     file.close();
 }
 
-// 读取数独问题并求解
-void solveSudokuFromFile(std::string inputFilename, std::string outputFilename) {
-    std::ifstream inputFile(inputFilename);
-    if (!inputFile.is_open()) {
-        std::cout << "Error opening input file: " << inputFilename << std::endl;
+// 生成数独游戏
+void generateSudokuGames(std::string filename, int gameCount) {
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        std::cout << "Error opening file: " << filename << std::endl;
         return;
     }
 
-    std::ofstream outputFile(outputFilename);
-    if (!outputFile.is_open()) {
-        std::cout << "Error creating output file: " << outputFilename << std::endl;
-        return;
-    }
+    std::random_device rd;
+    std::mt19937 gen(rd());
 
-    std::string line;
-    std::vector<std::vector<int>> board(SIZE, std::vector<int>(SIZE, EMPTY));
-    std::vector<std::vector<std::vector<int>>> solutions;
+    for (int i = 0; i < gameCount; ++i) {
+        std::vector<std::vector<int>> solution(SIZE, std::vector<int>(SIZE, EMPTY));
+        std::vector<std::vector<int>> game(SIZE, std::vector<int>(SIZE, EMPTY));
 
-    while (std::getline(inputFile, line)) {
-        std::stringstream ss(line);
-        int num;
-        int col = 0;
-        while (ss >> num) {
-            if (num == EMPTY_CHAR) {
-                board[0][col] = EMPTY;
+        // 生成数独终局
+        generateSudoku("temp_solution.txt", 1);
+
+        // 读取数独终局
+        std::ifstream solutionFile("temp_solution.txt");
+        if (!solutionFile.is_open()) {
+            std::cout << "Error opening solution file." << std::endl;
+            file.close();
+            return;
+        }
+
+        std::string line;
+        int row = 0;
+        while (std::getline(solutionFile, line)) {
+            std::stringstream ss(line);
+            int num;
+            int col = 0;
+            while (ss >> num) {
+                solution[row][col] = num;
+                game[row][col] = num;
+                col++;
+                
+            }
+            row++;
+        }
+
+        solutionFile.close();
+
+        // 生成数独游戏
+        int emptyCount = std::uniform_int_distribution<>(30, 50)(gen);  // 随机挖去的空格数量
+        //int emptyCount = 5;
+        while (emptyCount > 0) {
+            int row = std::uniform_int_distribution<>(0, SIZE - 1)(gen);
+            int col = std::uniform_int_distribution<>(0, SIZE - 1)(gen);
+            cout << row << " " << col << " " << game[row][col] << endl;
+            if (game[row][col] != EMPTY) {
+                game[row][col] = EMPTY;
+                emptyCount--;
             }
             else {
-                board[0][col] = num;
+                continue; // 当前格子已经为空，继续选择新的格子
             }
-            col++;
         }
 
-        // 求解数独问题
-        solveSudoku(board);
-
-        // 保存解决方案
-        solutions.push_back(board);
-
-        // 清空数独板
-        board = std::vector<std::vector<int>>(SIZE, std::vector<int>(SIZE, EMPTY));
-    }
-
-    // 输出所有解决方案到文件
-    for (const auto& solution : solutions) {
+        // 打印数独游戏到文件
         for (int row = 0; row < SIZE; ++row) {
             for (int col = 0; col < SIZE; ++col) {
-                if (solution[row][col] == EMPTY) {
-                    outputFile << EMPTY_CHAR << " ";
+                if (game[row][col] == EMPTY) {
+                    file << EMPTY_CHAR << " ";
                 }
                 else {
-                    outputFile << solution[row][col] << " ";
+                    file << game[row][col] << " ";
                 }
             }
-            outputFile << std::endl;
+            file << std::endl;
         }
-        outputFile << std::endl;
+        file << std::endl;
     }
 
-    inputFile.close();
-    outputFile.close();
+    file.close();
 }
-
 
 int main(int argc, char* argv[]) {
     if (argc < 3) {
-        std::cout << "Usage: sudoku.exe -c <count> | -s <inputFile> <outputFile>" << std::endl;
+        std::cout << "Usage: sudoku.exe -c <count> | -n <gameCount>" << std::endl;
         return 0;
     }
 
@@ -179,28 +195,14 @@ int main(int argc, char* argv[]) {
 
     if (mode == "-c") {
         int count = std::stoi(argv[2]);
-        if (count < 1 || count > 1000000) {
-            std::cout << "Invalid count. Count must be between 1 and 1000000." << std::endl;
-            return 0;
-        }
-
-        std::string filename = "sudoku_puzzles.txt";
-        generateSudoku(filename, count);
-        std::cout << "Sudoku puzzles generated and saved to: " << filename << std::endl;
+        generateSudoku("sudoku.txt", count);
     }
-    else if (mode == "-s") {
-        if (argc < 4) {
-            std::cout << "Usage: sudoku.exe -s <inputFile> <outputFile>" << std::endl;
-            return 0;
-        }
-
-        std::string inputFilename = argv[2];
-        std::string outputFilename = argv[3];
-        solveSudokuFromFile(inputFilename, outputFilename);
-        std::cout << "Sudoku problems solved and solution saved to: " << outputFilename << std::endl;
+    else if (mode == "-n") {
+        int gameCount = std::stoi(argv[2]);
+        generateSudokuGames("sudoku_games.txt", gameCount);
     }
     else {
-        std::cout << "Invalid mode. Available modes: -c, -s" << std::endl;
+        std::cout << "Invalid mode." << std::endl;
     }
 
     return 0;
