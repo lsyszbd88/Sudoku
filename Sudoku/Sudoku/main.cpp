@@ -65,6 +65,122 @@ bool solveSudoku(std::vector<std::vector<int>>& board) {
     return true;
 }
 
+FILE* answer;
+char grid[9][9] = { 0 };
+bool isPlace(int count)
+{
+    int row = count / 9;
+    int col = count % 9;
+    int j;
+    for (j = 0; j < 9; j++)     //同一行
+    {
+        if (grid[row][j] == grid[row][col] && j != col)
+            return false;
+    }
+
+    for (j = 0; j < 9; j++)     //同一列
+    {
+        if (grid[j][col] == grid[row][col] && j != row)
+            return false;
+    }
+
+    int baseRow = row / 3 * 3;
+    int baseCol = col / 3 * 3;
+    for (j = baseRow; j < baseRow + 3; j++)   //同一宫
+    {
+        for (int k = baseCol; k < baseCol + 3; k++)
+        {
+            if (grid[j][k] == grid[row][col] && (j != row || k != col))
+                return false;
+        }
+    }
+    return true;
+}
+
+void backtrace(int count)
+{
+    if (count == 81)
+    {
+        for (int i = 0; i < 9; ++i)
+        {
+
+            fprintf(answer, "%c %c %c %c %c %c %c %c %c\n", grid[i][0], grid[i][1], grid[i][2], grid[i][3], grid[i][4], grid[i][5], grid[i][6], grid[i][7], grid[i][8]);
+        }
+        fputs("\n", answer);
+        return;
+    }
+    int row = count / 9;
+    int col = count % 9;
+    if (grid[row][col] == '0')
+    {
+        for (int i = 1; i <= 9; i++)
+        {
+            grid[row][col] = i + '0';
+            if (isPlace(count))
+            {
+                backtrace(count + 1);//进入下一层
+            }
+
+        }
+        grid[row][col] = '0';//回溯
+    }
+    else
+        backtrace(count + 1);
+}
+// 求解数独问题
+void solveSudoku(string filename) {
+    ifstream problemfile(filename);
+    errno_t err;
+    err = fopen_s(&answer, "sudoku.txt", "w+");
+    if (problemfile)
+    {
+        int total = 0;
+        string temp[9];
+        string str;
+        int line = 0;
+        bool exc = false;
+        while (total < 1000000 && getline(problemfile, str))
+        {
+            temp[line] = str;  //从problemfile中读取一行到temp中
+            line++;
+            if (line == 9)   //每读入9行进行一次处理
+            {
+                for (int i = 0; i < 9; i++)
+                    for (int j = 0; j < 9; j++)
+                    {
+                        grid[i][j] = temp[i][2 * j];
+                        if (temp[i][2 * j] == EMPTY_CHAR)
+                        {
+                            grid[i][j] = '0';
+                        }
+                        //跳过空格将一个数独问题装入grid中
+                        if (grid[i][j] < '0' || grid[i][j] > '9')
+                        {
+                            exc = true;
+                            break;
+                        }
+                    }
+                getline(problemfile, str);//读入一个题目后的空行
+                line = 0;
+                if (exc)
+                {
+                    exc = false;
+                    cout << "Error!" << endl;
+                    continue;
+                }
+                total++;
+                // solve sudoku
+                long count = 0;
+                backtrace(0);
+            }
+        }
+        //resultfile.close();
+    }
+    else
+        cout << "Can't find such file:" << string(filename) << endl;
+}
+
+
 void generateSudoku(std::string filename, int count) {
     std::ofstream file(filename);
     if (!file.is_open()) {
@@ -331,11 +447,13 @@ int main(int argc, char* argv[]) {
     int minHoles = 0;
     int maxHoles = 0;
     int difficulty = 0;
+    char* solvefilename=NULL;
 
     bool hasN = false;
     bool hasR = false;
     bool hasM = false;
     bool hasU = false;
+    bool hasS = false;
 
     for (int i = 1; i < argc; i += 2) {
         std::string arg(argv[i]);
@@ -345,6 +463,20 @@ int main(int argc, char* argv[]) {
         else if (arg == "-n") {
             gameCount = std::stoi(argv[i + 1]);
             hasN = true;
+        }
+        else if (arg == "-s")
+        {
+            solvefilename = argv[i+1];
+            errno_t err;
+            FILE* tryopen;
+            err = fopen_s(&tryopen, solvefilename, "r");
+            if (err != 0)
+            {
+                printf("The file you want to open doesn't exist\n");
+                return 0;
+            }
+            hasS = true;
+            
         }
         else if (arg == "-r") {
             std::string range = argv[i + 1];
@@ -364,9 +496,16 @@ int main(int argc, char* argv[]) {
             hasU = true;
         }
     }
-
-    if (gameCount > 0) {
-        if (!hasN || (hasR && hasM)||(hasR && hasU)|| hasU && hasM) {
+    if (hasS) {
+        if (hasN || hasR || hasM || hasU ) {
+            std::cout << "Error: Invalid arguments." << std::endl;
+            return 0;
+        }
+        solveSudoku(string(solvefilename));
+    }
+    else if (gameCount > 0) {
+        cout << hasN << hasR << hasM << hasU;
+        if (!hasN || (hasR && hasM)||(hasR && hasU)|| (hasU && hasM)) {
             std::cout << "Error: Invalid arguments." << std::endl;
             return 0;
         }
@@ -393,7 +532,8 @@ int main(int argc, char* argv[]) {
             generateSudokuGames("games.txt", gameCount, minHoles, maxHoles, difficulty);
     }
     else if (sudokuCount > 0) {
-        if (hasR || hasM || hasU) {
+        cout << hasN << hasR << hasM << hasU;
+        if (hasN || hasR || hasM || hasU) {
             std::cout << "Error: Invalid arguments." << std::endl;
             return 0;
         }
@@ -401,7 +541,7 @@ int main(int argc, char* argv[]) {
         generateSudoku("sudokus.txt", sudokuCount);
     }
     else {
-        std::cout << "Invalid arguments." << std::endl;
+        std::cout << "Error：Invalid arguments." << std::endl;
     }
 
     return 0;
