@@ -6,59 +6,51 @@
 #include <string>
 #include <sstream>
 #include <numeric>
-#include <string>
-#include <stdio.h>
+
+
 using namespace std;
 
 const int SIZE = 9;
 const int EMPTY = 0;
 const char EMPTY_CHAR = '$';
 
-// 检查数字num是否可以填入指定位置
-bool isValid(const std::vector<std::vector<int>>& board, int row, int col, int num) {
-    // 检查行是否有重复
-    for (int i = 0; i < SIZE; ++i) {
-        if (board[row][i] == num) {
-            return false;
-        }
-    }
-
-    // 检查列是否有重复
-    for (int i = 0; i < SIZE; ++i) {
-        if (board[i][col] == num) {
-            return false;
-        }
-    }
-
-    // 检查小方格是否有重复
-    int boxRow = row - row % 3;
-    int boxCol = col - col % 3;
-    for (int i = boxRow; i < boxRow + 3; ++i) {
-        for (int j = boxCol; j < boxCol + 3; ++j) {
-            if (board[i][j] == num) {
+/*
+// 求解数独问题
+bool solveSudoku(std::vector<std::vector<int>>& board) {
+    for (int row = 0; row < SIZE; ++row) {
+        for (int col = 0; col < SIZE; ++col) {
+            if (board[row][col] == EMPTY) {
+                for (int num = 1; num <= SIZE; ++num) {
+                    if (isValid(board, row, col, num)) {
+                        board[row][col] = num;
+                        if (solveSudoku(board)) {
+                            return true;
+                        }
+                        board[row][col] = EMPTY;
+                    }
+                }
                 return false;
             }
         }
     }
-
     return true;
 }
+*/
 FILE* answer;
-char grid[9][9] = { 0 };
-bool isPlace(int count)
+bool isPlace(int count, std::vector<std::vector<int>>& board)
 {
     int row = count / 9;
     int col = count % 9;
     int j;
     for (j = 0; j < 9; j++)     //同一行
     {
-        if (grid[row][j] == grid[row][col] && j != col)
+        if (board[row][j] == board[row][col] && j != col)
             return false;
     }
 
     for (j = 0; j < 9; j++)     //同一列
     {
-        if (grid[j][col] == grid[row][col] && j != row)
+        if (board[j][col] == board[row][col] && j != row)
             return false;
     }
 
@@ -68,95 +60,54 @@ bool isPlace(int count)
     {
         for (int k = baseCol; k < baseCol + 3; k++)
         {
-            if (grid[j][k] == grid[row][col] && (j != row || k != col))
+            if (board[j][k] == board[row][col] && (j != row || k != col))
                 return false;
         }
     }
     return true;
 }
 
-void backtrace(int count)
+void backtrace(int count, long& resultcount, std::vector<std::vector<int>>& board)
 {
     if (count == 81)
     {
+        resultcount++;
         for (int i = 0; i < 9; ++i)
         {
 
-            fprintf(answer, "%c %c %c %c %c %c %c %c %c\n", grid[i][0], grid[i][1], grid[i][2], grid[i][3], grid[i][4], grid[i][5], grid[i][6], grid[i][7], grid[i][8]);
+            fprintf(answer, "%d %d %d %d %d %d %d %d %d\n", board[i][0], board[i][1], board[i][2], board[i][3], board[i][4], board[i][5], board[i][6], board[i][7], board[i][8]);
         }
         fputs("\n", answer);
         return;
     }
-    int row = count / 9;  
-    int col = count % 9; 
-    if (grid[row][col] == '0')
+    int row = count / 9;
+    int col = count % 9;
+    if (board[row][col] ==0)
     {
         for (int i = 1; i <= 9; i++)
         {
-            grid[row][col] = i + '0';
-            if (isPlace(count))
+            board[row][col] = i + 0;
+            if (isPlace(count, board))
             {
-                backtrace(count + 1);//进入下一层
+                backtrace(count + 1, resultcount, board);//进入下一层
             }
 
         }
-        grid[row][col] = '0';//回溯
+        board[row][col] = 0;//回溯
     }
     else
-        backtrace(count + 1);
+        backtrace(count + 1, resultcount, board);
 }
 // 求解数独问题
-void solveSudoku(string filename) {
-    ifstream problemfile(filename);
-    errno_t err;
-    err = fopen_s(&answer, "sudoku.txt", "w+");
-    if (problemfile)
-    {
-        int total = 0;
-        string temp[9];
-        string str;
-        int line = 0;
-        bool exc = false;   
-        while (total < 1000000 && getline(problemfile, str))
-        {
-            temp[line] = str;  //从problemfile中读取一行到temp中
-            line++;
-            if (line == 9)   //每读入9行进行一次处理
-            {
-                for (int i = 0; i < 9; i++)
-                    for (int j = 0; j < 9; j++)
-                    {
-                        grid[i][j] = temp[i][2 * j];
-                        if (temp[i][2 * j] == EMPTY_CHAR)
-                        {
-                            grid[i][j] = '0';
-                        }
-                          //跳过空格将一个数独问题装入grid中
-                        if (grid[i][j] < '0' || grid[i][j] > '9')
-                        {
-                            exc = true;
-                            break;
-                        }
-                    }
-                getline(problemfile, str);//读入一个题目后的空行
-                line = 0;
-                if (exc)
-                {
-                    exc = false;
-                    cout << "Error!" << endl;
-                    continue;
-                }
-                total++;
-                // solve sudoku
-                long count = 0;
-                backtrace(0);
-            }
-        }
-        //resultfile.close();
-    }
-    else
-        cout << "Can't find such file:" << string(filename) << endl;
+int solveSudoku(std::vector<std::vector<int>>& board) {
+   
+    // solve sudoku
+    long resultcount = 0;
+    backtrace(0, resultcount, board);
+    //resultfile.close();
+    return resultcount;
 }
+
 
 void generateSudoku(std::string filename, int count) {
     std::ofstream file(filename);
@@ -204,6 +155,111 @@ void generateSudoku(std::string filename, int count) {
 
     file.close();
 }
+
+bool hasUniqueSolution(const std::vector<std::vector<int>>& board) {
+    // 创建一个副本
+    std::vector<std::vector<int>> gameCopy = board;
+
+    // 使用回溯算法求解数独
+    if (solveSudoku(gameCopy) == 1)
+        return true;
+    return false;
+}
+
+void generateUniqueSudoku(std::string filename, int gameCount) {
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        std::cout << "Error opening file: " << filename << std::endl;
+        return;
+    }
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    // 根据难度和空格数量限制计算空格数量
+
+    for (int i = 0; i < gameCount; ++i) {
+        int emptyCount = std::uniform_int_distribution<>(20, 55)(gen);
+        std::vector<std::vector<int>> solution(SIZE, std::vector<int>(SIZE, EMPTY));
+        std::vector<std::vector<int>> game(SIZE, std::vector<int>(SIZE, EMPTY));
+
+        // 生成数独终局
+        generateSudoku("temp_solution.txt", 1);
+
+        // 读取数独终局
+        std::ifstream solutionFile("temp_solution.txt");
+        if (!solutionFile.is_open()) {
+            std::cout << "Error opening solution file." << std::endl;
+            file.close();
+            return;
+        }
+
+        // 解析数独终局
+        std::string line;
+        int row = 0;
+        while (std::getline(solutionFile, line)) {
+            std::stringstream ss(line);
+            int num;
+            int col = 0;
+            while (ss >> num) {
+                solution[row][col] = num;
+                game[row][col] = num;
+                col++;
+            }
+            row++;
+        }
+
+        solutionFile.close();
+
+        // 随机挖去空格
+        while (emptyCount > 0) {
+            int row = std::uniform_int_distribution<>(0, SIZE - 1)(gen);
+            int col = std::uniform_int_distribution<>(0, SIZE - 1)(gen);
+            if (game[row][col] != EMPTY) {
+                // 暂时移除数字
+                int temp = game[row][col];
+                game[row][col] = EMPTY;
+
+                // 检查是否有唯一解
+                if (!hasUniqueSolution(game)) {
+                    // 不唯一解，恢复数字
+                    game[row][col] = temp;
+                    continue;
+                }
+                emptyCount--;
+            }
+            else {
+                continue; // 当前格子已经为空，继续选择新的格子
+            }
+        }
+
+        std::string gameFilename = "games_u" + std::to_string(i) + ".txt";
+        std::ofstream file(gameFilename);
+        if (!file.is_open()) {
+            std::cout << "Error opening file: " << gameFilename << std::endl;
+            return;
+        }
+
+        // 打印数独游戏到文件
+        for (int row = 0; row < SIZE; ++row) {
+            for (int col = 0; col < SIZE; ++col) {
+                if (game[row][col] == EMPTY) {
+                    file << EMPTY_CHAR << " ";
+                }
+                else {
+                    file << game[row][col] << " ";
+                }
+            }
+            file << std::endl;
+        }
+        file << std::endl;
+
+        file.close();
+    }
+
+    file.close();
+}
+
 
 // 生成数独游戏
 void generateSudokuGames(std::string filename, int gameCount, int minHoles, int maxHoles, int difficulty) {
@@ -321,19 +377,26 @@ int main(int argc, char* argv[]) {
     int minHoles = 0;
     int maxHoles = 0;
     int difficulty = 0;
-    char* solvefilename;
+    char* solvefilename = NULL;
+
     bool hasN = false;
     bool hasR = false;
     bool hasM = false;
+    bool hasU = false;
+    bool hasS = false;
 
     for (int i = 1; i < argc; i += 2) {
         std::string arg(argv[i]);
         if (arg == "-c") {
             sudokuCount = std::stoi(argv[i + 1]);
         }
+        else if (arg == "-n") {
+            gameCount = std::stoi(argv[i + 1]);
+            hasN = true;
+        }
         else if (arg == "-s")
         {
-            solvefilename = argv[2];
+            solvefilename = argv[i + 1];
             errno_t err;
             FILE* tryopen;
             err = fopen_s(&tryopen, solvefilename, "r");
@@ -342,12 +405,8 @@ int main(int argc, char* argv[]) {
                 printf("The file you want to open doesn't exist\n");
                 return 0;
             }
-            solveSudoku(string(solvefilename));
-            return 0;
-        }
-        else if (arg == "-n") {
-            gameCount = std::stoi(argv[i + 1]);
-            hasN = true;
+            hasS = true;
+
         }
         else if (arg == "-r") {
             std::string range = argv[i + 1];
@@ -363,10 +422,127 @@ int main(int argc, char* argv[]) {
             difficulty = std::stoi(argv[i + 1]);
             hasM = true;
         }
+        else if (arg == "-u") {
+            hasU = true;
+        }
     }
+    if (hasS) {
+        if (hasN || hasR || hasM || hasU) {
+            std::cout << "Error: Invalid arguments." << std::endl;
+            return 0;
+        }
+        errno_t err;
+        err = fopen_s(&answer, "sudoku.txt", "w+");
+        ifstream problemfile(solvefilename);
+        std::vector<std::vector<int>> game(SIZE, std::vector<int>(SIZE, EMPTY));
+        std::string line;
+        if (problemfile)
+        {
+            int total = 0;
+            string str;
+            bool exc = false;
+            string s;
+            while (total < 1000000&&getline(problemfile,str))
+            {
+                if (str.empty()) {
+                    if (!s.empty()) {
+                        istringstream iss(s);
+                        string token;
+                        int row = 0;
+                        int col = 0;
+                        while (iss >> token) {
+                            if (token == "$") {
+                                game[row][col] = 0;
+                            }
+                            else {
+                                game[row][col] = std::stoi(token);
+                            }
+                            col++;
+                            if (col == SIZE) {
+                                col = 0;
+                                row++;
+                            }
+                            if (row == SIZE) {
+                                total++;
+                                // solve sudoku
+                                long num = solveSudoku(game);
+                                cout << num << "results";
+                            }
+                        }
+                        s.clear();
+                    }
+                }
+                else {
+                    s += str + " ";
+                }
+            }
+            if (!s.empty()) {
+                istringstream iss(s);
+                string token;
+                int row = 0;
+                int col = 0;
+                while (iss >> token) {
+                    if (token == "$") {
+                        game[row][col] = 0;
+                    }
+                    else {
+                        game[row][col] = std::stoi(token);
+                    }
+                    col++;
+                    if (col == SIZE) {
+                        col = 0;
+                        row++;
+                    }
+                    if (row == SIZE) {
+                        total++;
+                        // solve sudoku
+                        long num = solveSudoku(game);
+                        cout << num << "results";
+                    }
+                }
+            }
+            /*
+                if (token == "$") {
+                    game[row][col] = 0;
+                }
 
-    if (gameCount > 0) {
-        if (!hasN || (hasR && hasM)) {
+                else {
+                    game[row][col] = std::stoi(token);
+                    if (game[row][col] < 0 || game[row][col] > 9)
+                    {
+                        exc = true;
+                    }
+                }
+                col++;
+                if (col == SIZE) {
+                    col = 0;
+                    row++;
+                }
+                if (row == 9)
+                {
+                    getline(problemfile,str);
+                    row = 0;
+                    if (exc)
+                    {
+                        exc = false;
+                        cout << "Input Error!" << endl;
+                        continue;
+                    }
+                    total++;
+                    // solve sudoku
+                    long num = solveSudoku(game);
+                    cout << num << "results";
+                }
+            }
+            */
+            //resultfile.close();
+        }
+        else
+            cout << "Can't find such file:" << string(solvefilename) << endl;
+    }
+    else if (gameCount > 0) {
+        cout << hasN << hasR << hasM << hasU;
+        if (!hasN || (hasR && hasM) || (hasR && hasU) || (hasU && hasM)) {
             std::cout << "Error: Invalid arguments." << std::endl;
             return 0;
         }
@@ -387,11 +563,14 @@ int main(int argc, char* argv[]) {
                 return 0;
             }
         }
-
-        generateSudokuGames("games.txt", gameCount, minHoles, maxHoles, difficulty);
+        if (hasU)
+            generateUniqueSudoku("games.txt", gameCount);
+        else
+            generateSudokuGames("games.txt", gameCount, minHoles, maxHoles, difficulty);
     }
     else if (sudokuCount > 0) {
-        if (hasR || hasM) {
+        cout << hasN << hasR << hasM << hasU;
+        if (hasN || hasR || hasM || hasU) {
             std::cout << "Error: Invalid arguments." << std::endl;
             return 0;
         }
@@ -399,7 +578,7 @@ int main(int argc, char* argv[]) {
         generateSudoku("sudokus.txt", sudokuCount);
     }
     else {
-        std::cout << "Invalid arguments." << std::endl;
+        std::cout << "Error：Invalid arguments." << std::endl;
     }
 
     return 0;
