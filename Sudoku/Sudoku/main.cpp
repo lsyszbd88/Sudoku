@@ -237,8 +237,8 @@ bool hasUniqueSolution(const std::vector<std::vector<int>>& board) {
 }
 
 void generateUniqueSudoku(std::string filename, int gameCount) {
-    std::ofstream file(filename);
-    if (!file.is_open()) {
+    std::ofstream file1(filename);
+    if (!file1.is_open()) {
         std::cout << "Error opening file: " << filename << std::endl;
         return;
     }
@@ -260,23 +260,23 @@ void generateUniqueSudoku(std::string filename, int gameCount) {
         std::ifstream solutionFile("temp_solution.txt");
         if (!solutionFile.is_open()) {
             std::cout << "Error opening solution file." << std::endl;
-            file.close();
+            file1.close();
             return;
         }
 
         // 解析数独终局
         std::string line;
-        int row = 0;
+        int row1 = 0;
         while (std::getline(solutionFile, line)) {
             std::stringstream ss(line);
             int num;
             int col = 0;
             while (ss >> num) {
-                solution[row][col] = num;
-                game[row][col] = num;
+                solution[row1][col] = num;
+                game[row1][col] = num;
                 col++;
             }
-            row++;
+            row1++;
         }
 
         solutionFile.close();
@@ -327,29 +327,29 @@ void generateUniqueSudoku(std::string filename, int gameCount) {
         file.close();
     }
 
-    file.close();
+    file1.close();
 }
 
 
 // 生成数独游戏
 void generateSudokuGames(std::string filename, int gameCount, int minHoles, int maxHoles, int difficulty) {
-    std::ofstream file(filename);
-    if (!file.is_open()) {
+    std::ofstream file1(filename);
+    if (!file1.is_open()) {
         std::cout << "Error opening file: " << filename << std::endl;
         return;
     }
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    int emptyCount;
+    //int emptyCount;
     if (difficulty == 0) {
         if (minHoles == 0) {
             minHoles = 20;
             maxHoles = 55;
-            emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
+            //emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
         }
-        else
-            emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
+        /*else
+            emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);*/
     }
     else {
         if (minHoles == 0) {
@@ -359,7 +359,7 @@ void generateSudokuGames(std::string filename, int gameCount, int minHoles, int 
             case 2:minHoles = 35; maxHoles = 49; break;
             case 3:minHoles = 50; maxHoles = 55; break;
             }
-            emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
+            //emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
         }
         else {
             cout << minHoles << endl;
@@ -378,23 +378,23 @@ void generateSudokuGames(std::string filename, int gameCount, int minHoles, int 
         std::ifstream solutionFile("temp_solution.txt");
         if (!solutionFile.is_open()) {
             std::cout << "Error opening solution file." << std::endl;
-            file.close();
+            file1.close();
             return;
         }
 
         std::string line;
-        int row = 0;
+        int row1 = 0;
         while (std::getline(solutionFile, line)) {
             std::stringstream ss(line);
             int num;
             int col = 0;
             while (ss >> num) {
-                solution[row][col] = num;
-                game[row][col] = num;
+                solution[row1][col] = num;
+                game[row1][col] = num;
                 col++;
 
             }
-            row++;
+            row1++;
         }
 
         solutionFile.close();
@@ -438,7 +438,7 @@ void generateSudokuGames(std::string filename, int gameCount, int minHoles, int 
         file.close();
     }
 
-    file.close();
+    file1.close();
 }
 
 int main(int argc, char* argv[]) {
