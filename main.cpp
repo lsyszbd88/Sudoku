@@ -6,7 +6,7 @@
 #include <string>
 #include <sstream>
 #include <numeric>
-
+#include<iomanip>
 
 using namespace std;
 
@@ -492,6 +492,14 @@ void ReadAndSolve(const char* solvefilename) {
     return;
 }
 int main(int argc, char* argv[]) {
+    cout << "Welcome to Sudoku Program! You can input the following cmmmand:" << endl;
+    cout << setw(8) << "argc" << setw(15) << "argv" << setw(25) << "function" << endl;
+    cout << setw(8) << "-c" << setw(15) << "1-1000000" << setw(25) << "生成数独终局" << endl;
+    cout << setw(8) << "-s" << setw(15) << "解题路径" << setw(25) << "求解数独游戏" << endl;
+    cout << setw(8) << "-n" << setw(15) << "1-10000" << setw(25) << "生成数独游戏的数量" << endl;
+    cout << setw(8) << "-m" << setw(15) << "1-3" << setw(25) << "生成数独游戏的难度" << endl;
+    cout << setw(8) << "-r" << setw(15) << "20-55" << setw(25) << "指定数独有戏挖空数" << endl;
+    cout << setw(8) << "-u" << setw(15) << "" << setw(25) << "生成数独游戏的解唯一" << endl;
     int sudokuCount = 0;
     int gameCount = 0;
     int minHoles = 0;
