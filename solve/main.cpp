@@ -6,157 +6,109 @@
 #include <string>
 #include <sstream>
 #include <numeric>
-#include <string>
-#include <stdio.h>
+#include<iomanip>
+
 using namespace std;
 
 const int SIZE = 9;
 const int EMPTY = 0;
 const char EMPTY_CHAR = '$';
 
-// ¼ì²éÊı×ÖnumÊÇ·ñ¿ÉÒÔÌîÈëÖ¸¶¨Î»ÖÃ
-bool isValid(const std::vector<std::vector<int>>& board, int row, int col, int num) {
-    // ¼ì²éĞĞÊÇ·ñÓĞÖØ¸´
-    for (int i = 0; i < SIZE; ++i) {
-        if (board[row][i] == num) {
-            return false;
-        }
-    }
-
-    // ¼ì²éÁĞÊÇ·ñÓĞÖØ¸´
-    for (int i = 0; i < SIZE; ++i) {
-        if (board[i][col] == num) {
-            return false;
-        }
-    }
-
-    // ¼ì²éĞ¡·½¸ñÊÇ·ñÓĞÖØ¸´
-    int boxRow = row - row % 3;
-    int boxCol = col - col % 3;
-    for (int i = boxRow; i < boxRow + 3; ++i) {
-        for (int j = boxCol; j < boxCol + 3; ++j) {
-            if (board[i][j] == num) {
+/*
+// æ±‚è§£æ•°ç‹¬é—®é¢˜
+bool solveSudoku(std::vector<std::vector<int>>& board) {
+    for (int row = 0; row < SIZE; ++row) {
+        for (int col = 0; col < SIZE; ++col) {
+            if (board[row][col] == EMPTY) {
+                for (int num = 1; num <= SIZE; ++num) {
+                    if (isValid(board, row, col, num)) {
+                        board[row][col] = num;
+                        if (solveSudoku(board)) {
+                            return true;
+                        }
+                        board[row][col] = EMPTY;
+                    }
+                }
                 return false;
             }
         }
     }
-
     return true;
 }
+*/
 FILE* answer;
-char grid[9][9] = { 0 };
-bool isPlace(int count)
+bool isPlace(int count, const std::vector<std::vector<int>>& board)
 {
     int row = count / 9;
     int col = count % 9;
     int j;
-    for (j = 0; j < 9; j++)     //Í¬Ò»ĞĞ
+    for (j = 0; j < 9; j++)     //åŒä¸€è¡Œ
     {
-        if (grid[row][j] == grid[row][col] && j != col)
+
+        if (board[row][j] == board[row][col] && j != col)
             return false;
     }
 
-    for (j = 0; j < 9; j++)     //Í¬Ò»ÁĞ
+    for (j = 0; j < 9; j++)     //åŒä¸€åˆ—
     {
-        if (grid[j][col] == grid[row][col] && j != row)
+        if (board[j][col] == board[row][col] && j != row)
             return false;
     }
 
     int baseRow = row / 3 * 3;
     int baseCol = col / 3 * 3;
-    for (j = baseRow; j < baseRow + 3; j++)   //Í¬Ò»¹¬
+    for (j = baseRow; j < baseRow + 3; j++)   //åŒä¸€å®«
     {
         for (int k = baseCol; k < baseCol + 3; k++)
         {
-            if (grid[j][k] == grid[row][col] && (j != row || k != col))
+            if (board[j][k] == board[row][col] && (j != row || k != col))
                 return false;
         }
     }
     return true;
 }
 
-void backtrace(int count)
+void backtrace(int count, long& resultcount, std::vector<std::vector<int>>& board)
 {
     if (count == 81)
     {
+        resultcount++;
         for (int i = 0; i < 9; ++i)
         {
 
-            fprintf(answer, "%c %c %c %c %c %c %c %c %c\n", grid[i][0], grid[i][1], grid[i][2], grid[i][3], grid[i][4], grid[i][5], grid[i][6], grid[i][7], grid[i][8]);
+            fprintf(answer, "%d %d %d %d %d %d %d %d %d\n", board[i][0], board[i][1], board[i][2], board[i][3], board[i][4], board[i][5], board[i][6], board[i][7], board[i][8]);
         }
         fputs("\n", answer);
         return;
     }
-    int row = count / 9;  
-    int col = count % 9; 
-    if (grid[row][col] == '0')
+    int row = count / 9;
+    int col = count % 9;
+    if (board[row][col] == 0)
     {
         for (int i = 1; i <= 9; i++)
         {
-            grid[row][col] = i + '0';
-            if (isPlace(count))
+            board[row][col] = i + 0;
+            if (isPlace(count, board))
             {
-                backtrace(count + 1);//½øÈëÏÂÒ»²ã
+                backtrace(count + 1, resultcount, board);//è¿›å…¥ä¸‹ä¸€å±‚
             }
 
         }
-        grid[row][col] = '0';//»ØËİ
+        board[row][col] = 0;//å›æº¯
     }
     else
-        backtrace(count + 1);
+        backtrace(count + 1, resultcount, board);
 }
-// Çó½âÊı¶ÀÎÊÌâ
-void solveSudoku(string filename) {
-    ifstream problemfile(filename);
-    errno_t err;
-    err = fopen_s(&answer, "sudoku.txt", "w+");
-    if (problemfile)
-    {
-        int total = 0;
-        string temp[9];
-        string str;
-        int line = 0;
-        bool exc = false;   
-        while (total < 1000000 && getline(problemfile, str))
-        {
-            temp[line] = str;  //´ÓproblemfileÖĞ¶ÁÈ¡Ò»ĞĞµ½tempÖĞ
-            line++;
-            if (line == 9)   //Ã¿¶ÁÈë9ĞĞ½øĞĞÒ»´Î´¦Àí
-            {
-                for (int i = 0; i < 9; i++)
-                    for (int j = 0; j < 9; j++)
-                    {
-                        grid[i][j] = temp[i][2 * j];
-                        if (temp[i][2 * j] == EMPTY_CHAR)
-                        {
-                            grid[i][j] = '0';
-                        }
-                          //Ìø¹ı¿Õ¸ñ½«Ò»¸öÊı¶ÀÎÊÌâ×°ÈëgridÖĞ
-                        if (grid[i][j] < '0' || grid[i][j] > '9')
-                        {
-                            exc = true;
-                            break;
-                        }
-                    }
-                getline(problemfile, str);//¶ÁÈëÒ»¸öÌâÄ¿ºóµÄ¿ÕĞĞ
-                line = 0;
-                if (exc)
-                {
-                    exc = false;
-                    cout << "Error!" << endl;
-                    continue;
-                }
-                total++;
-                // solve sudoku
-                long count = 0;
-                backtrace(0);
-            }
-        }
-        //resultfile.close();
-    }
-    else
-        cout << "Can't find such file:" << string(filename) << endl;
+// æ±‚è§£æ•°ç‹¬é—®é¢˜
+int solveSudoku(std::vector<std::vector<int>>& board) {
+
+    // solve sudoku
+    long resultcount = 0;
+    backtrace(0, resultcount, board);
+    //resultfile.close();
+    return resultcount;
 }
+
 
 void generateSudoku(std::string filename, int count) {
     std::ofstream file(filename);
@@ -171,14 +123,14 @@ void generateSudoku(std::string filename, int count) {
     for (int i = 0; i < count; ++i) {
         std::vector<std::vector<int>> board(SIZE, std::vector<int>(SIZE, EMPTY));
 
-        // Ëæ»ú´òÂÒµÚÒ»ĞĞ
+        // éšæœºæ‰“ä¹±ç¬¬ä¸€è¡Œ
         std::vector<int> firstRow(SIZE);
         for (int j = 0; j < SIZE; ++j) {
             firstRow[j] = j + 1;
         }
         std::shuffle(firstRow.begin(), firstRow.end(), gen);
 
-        // ¸ù¾İÆ«ÒÆÖµÉú³ÉÊ£ÓàĞĞ
+        // æ ¹æ®åç§»å€¼ç”Ÿæˆå‰©ä½™è¡Œ
         int offset[9] = { 0, 6, 6, 5, 6, 6, 5, 6, 6 };
         for (int row = 0; row < SIZE; ++row) {
             std::rotate(firstRow.begin(), firstRow.begin() + offset[row], firstRow.end());
@@ -187,12 +139,12 @@ void generateSudoku(std::string filename, int count) {
             }
         }
 
-        // Ëæ»ú½øĞĞĞĞ±ä»»
+        // éšæœºè¿›è¡Œè¡Œå˜æ¢
         std::shuffle(board.begin(), board.begin() + 3, gen);
         std::shuffle(board.begin() + 3, board.begin() + 6, gen);
         std::shuffle(board.begin() + 6, board.end(), gen);
 
-        // ´òÓ¡Êı¶ÀÖÕ¾Öµ½ÎÄ¼ş
+        // æ‰“å°æ•°ç‹¬ç»ˆå±€åˆ°æ–‡ä»¶
         for (int row = 0; row < SIZE; ++row) {
             for (int col = 0; col < SIZE; ++col) {
                 file << board[row][col] << " ";
@@ -205,97 +157,90 @@ void generateSudoku(std::string filename, int count) {
     file.close();
 }
 
-// Éú³ÉÊı¶ÀÓÎÏ·
-void generateSudokuGames(std::string filename, int gameCount, int minHoles, int maxHoles, int difficulty) {
-    std::ofstream file(filename);
-    if (!file.is_open()) {
+bool hasUniqueSolution(const std::vector<std::vector<int>>& board) {
+    // åˆ›å»ºä¸€ä¸ªå‰¯æœ¬
+    std::vector<std::vector<int>> gameCopy = board;
+    // ä½¿ç”¨å›æº¯ç®—æ³•æ±‚è§£æ•°ç‹¬
+    if (solveSudoku(gameCopy) == 1)
+        return true;
+    return false;
+}
+
+void generateUniqueSudoku(std::string filename, int gameCount) {
+    std::ofstream file1(filename);
+    if (!file1.is_open()) {
         std::cout << "Error opening file: " << filename << std::endl;
         return;
     }
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    int emptyCount;
-    if (difficulty == 0) {
-        if (minHoles == 0) {
-            minHoles = 20;
-            maxHoles = 55;
-            emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
-        }
-        else
-            emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
-    }
-    else {
-        if (minHoles == 0) {
-            switch (difficulty)
-            {
-            case 1:minHoles = 20; maxHoles = 34; break;
-            case 2:minHoles = 35; maxHoles = 49; break;
-            case 3:minHoles = 50; maxHoles = 55; break;
-            }
-            emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
-        }
-        else {
-            cout << minHoles << endl;
-            std::cout << "Error: [-m] and [-r] can't appear together." << std::endl;
-            return;
-        }
-    }
+
+    // æ ¹æ®éš¾åº¦å’Œç©ºæ ¼æ•°é‡é™åˆ¶è®¡ç®—ç©ºæ ¼æ•°é‡
+
     for (int i = 0; i < gameCount; ++i) {
+        int emptyCount = std::uniform_int_distribution<>(20, 55)(gen);
         std::vector<std::vector<int>> solution(SIZE, std::vector<int>(SIZE, EMPTY));
         std::vector<std::vector<int>> game(SIZE, std::vector<int>(SIZE, EMPTY));
 
-        // Éú³ÉÊı¶ÀÖÕ¾Ö
+        // ç”Ÿæˆæ•°ç‹¬ç»ˆå±€
         generateSudoku("temp_solution.txt", 1);
 
-        // ¶ÁÈ¡Êı¶ÀÖÕ¾Ö
+        // è¯»å–æ•°ç‹¬ç»ˆå±€
         std::ifstream solutionFile("temp_solution.txt");
         if (!solutionFile.is_open()) {
             std::cout << "Error opening solution file." << std::endl;
-            file.close();
+            file1.close();
             return;
         }
-
+        // è§£ææ•°ç‹¬ç»ˆå±€
         std::string line;
-        int row = 0;
+        int row1 = 0;
         while (std::getline(solutionFile, line)) {
             std::stringstream ss(line);
             int num;
             int col = 0;
             while (ss >> num) {
-                solution[row][col] = num;
-                game[row][col] = num;
+                solution[row1][col] = num;
+                game[row1][col] = num;
                 col++;
-
             }
-            row++;
+            row1++;
         }
 
         solutionFile.close();
 
-        // Éú³ÉÊı¶ÀÓÎÏ·
-
-        int emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);  // Ëæ»úÍÚÈ¥µÄ¿Õ¸ñÊıÁ¿
+        // éšæœºæŒ–å»ç©ºæ ¼
         while (emptyCount > 0) {
             int row = std::uniform_int_distribution<>(0, SIZE - 1)(gen);
             int col = std::uniform_int_distribution<>(0, SIZE - 1)(gen);
             if (game[row][col] != EMPTY) {
+                // æš‚æ—¶ç§»é™¤æ•°å­—
+                int temp = game[row][col];
                 game[row][col] = EMPTY;
+                //cout << "ss";
+                // æ£€æŸ¥æ˜¯å¦æœ‰å”¯ä¸€è§£
+                if (!hasUniqueSolution(game)) {
+                    // ä¸å”¯ä¸€è§£ï¼Œæ¢å¤æ•°å­—
+                    game[row][col] = temp;
+                    continue;
+                }
+                //cout << "ss";
                 emptyCount--;
             }
             else {
-                continue; // µ±Ç°¸ñ×ÓÒÑ¾­Îª¿Õ£¬¼ÌĞøÑ¡ÔñĞÂµÄ¸ñ×Ó
+                continue; // å½“å‰æ ¼å­å·²ç»ä¸ºç©ºï¼Œç»§ç»­é€‰æ‹©æ–°çš„æ ¼å­
             }
         }
 
-        std::string gameFilename = "games" + std::to_string(i) + ".txt";
+        std::string gameFilename = "games_u" + std::to_string(i) + ".txt";
         std::ofstream file(gameFilename);
         if (!file.is_open()) {
             std::cout << "Error opening file: " << gameFilename << std::endl;
             return;
         }
 
-        // ´òÓ¡Êı¶ÀÓÎÏ·µ½ÎÄ¼ş
+        // æ‰“å°æ•°ç‹¬æ¸¸æˆåˆ°æ–‡ä»¶
         for (int row = 0; row < SIZE; ++row) {
             for (int col = 0; col < SIZE; ++col) {
                 if (game[row][col] == EMPTY) {
@@ -312,28 +257,271 @@ void generateSudokuGames(std::string filename, int gameCount, int minHoles, int 
         file.close();
     }
 
-    file.close();
+    file1.close();
 }
 
+
+// ç”Ÿæˆæ•°ç‹¬æ¸¸æˆ
+void generateSudokuGames(std::string filename, int gameCount, int minHoles, int maxHoles, int difficulty) {
+    std::ofstream file1(filename);
+    if (!file1.is_open()) {
+        std::cout << "Error opening file: " << filename << std::endl;
+        return;
+    }
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    //int emptyCount;
+    if (difficulty == 0) {
+        if (minHoles == 0) {
+            minHoles = 20;
+            maxHoles = 55;
+            //emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
+        }
+        /*else
+            emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);*/
+    }
+    else {
+        if (minHoles == 0) {
+            switch (difficulty)
+            {
+            case 1:minHoles = 20; maxHoles = 34; break;
+            case 2:minHoles = 35; maxHoles = 49; break;
+            case 3:minHoles = 50; maxHoles = 55; break;
+            }
+            //emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
+        }
+        else {
+            cout << minHoles << endl;
+            std::cout << "Error: [-m] and [-r] can't appear together." << std::endl;
+            return;
+        }
+    }
+    for (int i = 0; i < gameCount; ++i) {
+        std::vector<std::vector<int>> solution(SIZE, std::vector<int>(SIZE, EMPTY));
+        std::vector<std::vector<int>> game(SIZE, std::vector<int>(SIZE, EMPTY));
+
+        // ç”Ÿæˆæ•°ç‹¬ç»ˆå±€
+        generateSudoku("temp_solution.txt", 1);
+
+        // è¯»å–æ•°ç‹¬ç»ˆå±€
+        std::ifstream solutionFile("temp_solution.txt");
+        if (!solutionFile.is_open()) {
+            std::cout << "Error opening solution file." << std::endl;
+            file1.close();
+            return;
+        }
+
+        std::string line;
+        int row1 = 0;
+        while (std::getline(solutionFile, line)) {
+            std::stringstream ss(line);
+            int num;
+            int col = 0;
+            while (ss >> num) {
+                solution[row1][col] = num;
+                game[row1][col] = num;
+                col++;
+
+            }
+            row1++;
+        }
+
+        solutionFile.close();
+
+        // ç”Ÿæˆæ•°ç‹¬æ¸¸æˆ
+
+        int emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);  // éšæœºæŒ–å»çš„ç©ºæ ¼æ•°é‡
+        while (emptyCount > 0) {
+            int row = std::uniform_int_distribution<>(0, SIZE - 1)(gen);
+            int col = std::uniform_int_distribution<>(0, SIZE - 1)(gen);
+            if (game[row][col] != EMPTY) {
+                game[row][col] = EMPTY;
+                emptyCount--;
+            }
+            else {
+                continue; // å½“å‰æ ¼å­å·²ç»ä¸ºç©ºï¼Œç»§ç»­é€‰æ‹©æ–°çš„æ ¼å­
+            }
+        }
+
+        std::string gameFilename = "games" + std::to_string(i) + ".txt";
+        std::ofstream file(gameFilename);
+        if (!file.is_open()) {
+            std::cout << "Error opening file: " << gameFilename << std::endl;
+            return;
+        }
+
+        // æ‰“å°æ•°ç‹¬æ¸¸æˆåˆ°æ–‡ä»¶
+        for (int row = 0; row < SIZE; ++row) {
+            for (int col = 0; col < SIZE; ++col) {
+                if (game[row][col] == EMPTY) {
+                    file << EMPTY_CHAR << " ";
+                }
+                else {
+                    file << game[row][col] << " ";
+                }
+            }
+            file << std::endl;
+        }
+        file << std::endl;
+
+        file.close();
+    }
+
+    file1.close();
+}
+bool checkInput(const std::vector<std::vector<int>>& board)
+{
+    for (int i = 0; i < 9; i++)     //åŒä¸€è¡Œ
+    {
+        for (int j = 0; j < 9; j++)
+        {
+            for (int t = j + 1; t < 9; t++)
+            {
+                if (board[i][t] != 0 && board[i][t] == board[i][j])
+                {
+                    return false;
+                }
+            }
+        }
+    }
+    for (int i = 0; i < 9; i++)     //åŒä¸€è¡Œ
+    {
+        for (int j = 0; j < 9; j++)
+        {
+            for (int t = j + 1; t < 9; t++)
+            {
+                if (board[t][i] != 0 && board[t][i] == board[j][i])
+                {
+                    return false;
+                }
+            }
+        }
+    }
+    for (int i = 0; i < 9; i += 3)     //åŒä¸€è¡Œ
+    {
+        for (int j = 0; j < 9; j += 3)
+        {
+            bool check[10];
+            for (int t = 0; t < 10; t++)
+            {
+                check[t] = false;
+            }
+            for (int m = i; m < i + 3; m++)
+            {
+                for (int n = j; n < j + 3; n++)
+                {
+                    if (check[board[m][n]] && board[m][n] != 0)
+                    {
+                        return false;
+                    }
+                    check[board[m][n]] = true;
+                }
+            }
+        }
+    }
+    return true;
+}
+void ReadAndSolve(const char* solvefilename) {
+    errno_t err;
+    FILE* tryopen;
+    err = fopen_s(&tryopen, solvefilename, "r");
+    if (err != 0)
+    {
+        printf("The file you want to open doesn't exist\n");
+        return;
+    }
+    ifstream problemfile(solvefilename);
+    std::vector<std::vector<int>> game(SIZE, std::vector<int>(SIZE, EMPTY));
+    //std::string line;
+    if (problemfile)
+    {
+        int total = 0;
+        string str;
+        //bool exc = false;
+        string s;
+        while (total < 1000000 && getline(problemfile, str))
+        {
+            if (str.empty()) {
+                if (!s.empty()) {
+                    istringstream iss(s);
+                    string token;
+                    int row = 0;
+                    int col = 0;
+                    while (iss >> token) {
+                        if (token == "$") {
+                            game[row][col] = 0;
+                        }
+                        else {
+                            game[row][col] = std::stoi(token);
+                        }
+                        col++;
+                        if (col == SIZE) {
+                            col = 0;
+                            row++;
+                        }
+                        if (row == SIZE) {
+                            total++;
+                            // solve sudoku
+                            bool inputok = checkInput(game);
+                            if (inputok)
+                            {
+                                long num = solveSudoku(game);
+                                cout << num << "results" << endl;
+                            }
+                            else
+                            {
+                                cout << "input é‡å¤number";
+
+                            }
+                        }
+                    }
+                    s.clear();
+                }
+            }
+            else {
+                s += str + " ";
+            }
+        }
+    }
+    else
+        cout << "Can't find such file:" << string(solvefilename) << endl;
+
+    return;
+}
 int main(int argc, char* argv[]) {
+
     int sudokuCount = 0;
     int gameCount = 0;
     int minHoles = 0;
     int maxHoles = 0;
     int difficulty = 0;
-    char* solvefilename;
+    char* solvefilename = NULL;
+    errno_t err1;
+    err1 = fopen_s(&answer, "sudoku.txt", "w+");
+    if (err1 != 0)
+    {
+        printf("The file you want to open doesn't exist\n");
+        return 0;
+    }
     bool hasN = false;
     bool hasR = false;
     bool hasM = false;
+    bool hasU = false;
+    bool hasS = false;
 
     for (int i = 1; i < argc; i += 2) {
         std::string arg(argv[i]);
         if (arg == "-c") {
             sudokuCount = std::stoi(argv[i + 1]);
         }
+        else if (arg == "-n") {
+            gameCount = std::stoi(argv[i + 1]);
+            hasN = true;
+        }
         else if (arg == "-s")
         {
-            solvefilename = argv[2];
+            solvefilename = argv[i + 1];
             errno_t err;
             FILE* tryopen;
             err = fopen_s(&tryopen, solvefilename, "r");
@@ -342,12 +530,8 @@ int main(int argc, char* argv[]) {
                 printf("The file you want to open doesn't exist\n");
                 return 0;
             }
-            solveSudoku(string(solvefilename));
-            return 0;
-        }
-        else if (arg == "-n") {
-            gameCount = std::stoi(argv[i + 1]);
-            hasN = true;
+            hasS = true;
+
         }
         else if (arg == "-r") {
             std::string range = argv[i + 1];
@@ -363,11 +547,21 @@ int main(int argc, char* argv[]) {
             difficulty = std::stoi(argv[i + 1]);
             hasM = true;
         }
+        else if (arg == "-u") {
+            hasU = true;
+        }
     }
-
-    if (gameCount > 0) {
-        if (!hasN || (hasR && hasM)) {
-            std::cout << "Error: Invalid arguments." << std::endl;
+    if (hasS) {
+        if (hasN || hasR || hasM || hasU) {
+            std::cout << "Error: Invalid arguments0." << std::endl;
+            return 0;
+        }
+        ReadAndSolve(solvefilename);
+    }
+    else if (gameCount > 0) {
+        cout << hasN << hasR << hasM << hasU;
+        if (!hasN || (hasR && hasM) || (hasR && hasU) || (hasU && hasM)) {
+            std::cout << "Error: Invalid arguments1." << std::endl;
             return 0;
         }
 
@@ -387,20 +581,31 @@ int main(int argc, char* argv[]) {
                 return 0;
             }
         }
-
-        generateSudokuGames("games.txt", gameCount, minHoles, maxHoles, difficulty);
+        if (hasU)
+            generateUniqueSudoku("games.txt", gameCount);
+        else
+            generateSudokuGames("games.txt", gameCount, minHoles, maxHoles, difficulty);
     }
     else if (sudokuCount > 0) {
-        if (hasR || hasM) {
-            std::cout << "Error: Invalid arguments." << std::endl;
+        cout << hasN << hasR << hasM << hasU;
+        if (hasN || hasR || hasM || hasU) {
+            std::cout << "Error: Invalid arguments2." << std::endl;
             return 0;
         }
 
         generateSudoku("sudokus.txt", sudokuCount);
     }
     else {
-        std::cout << "Invalid arguments." << std::endl;
+        std::cout << "Errorï¼šInvalid arguments3." << std::endl;
     }
-
+    cout << " You can input the following cmmmand:" << endl;
+    cout << setw(8) << "argc" << setw(15) << "argv" << setw(25) << "function" << endl;
+    cout << setw(8) << "-c" << setw(15) << "1-1000000" << setw(25) << "ç”Ÿæˆæ•°ç‹¬ç»ˆå±€" << endl;
+    cout << setw(8) << "-s" << setw(15) << "è§£é¢˜è·¯å¾„" << setw(25) << "æ±‚è§£æ•°ç‹¬æ¸¸æˆ" << endl;
+    cout << setw(8) << "-n" << setw(15) << "1-10000" << setw(25) << "ç”Ÿæˆæ•°ç‹¬æ¸¸æˆçš„æ•°é‡" << endl;
+    cout << setw(8) << "-m" << setw(15) << "1-3" << setw(25) << "ç”Ÿæˆæ•°ç‹¬æ¸¸æˆçš„éš¾åº¦" << endl;
+    cout << setw(8) << "-r" << setw(15) << "20-55" << setw(25) << "æŒ‡å®šæ•°ç‹¬æœ‰æˆæŒ–ç©ºæ•°" << endl;
+    cout << setw(8) << "-u" << setw(15) << "" << setw(25) << "ç”Ÿæˆæ•°ç‹¬æ¸¸æˆçš„è§£å”¯ä¸€" << endl;
     return 0;
 }
+//-s ../x64/Debug/games14.txt
