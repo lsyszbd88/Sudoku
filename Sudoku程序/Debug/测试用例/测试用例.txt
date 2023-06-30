@@ -1,0 +1,53 @@
+生成终局:
+//正常
+sudoku.exe -c 100
+
+生成游戏：
+//生成游戏
+sudoku.exe -n 10
+//生成唯一解游戏
+sudoku.exe -n 5 -u
+//指定挖空范围
+sudoku.exe -n 5 -r 20~30
+//指定难度
+sudoku.exe -n 5 -m 1
+sudoku.exe -n 5 -m 2
+sudoku.exe -n 5 -m 3
+//一些Invalid arguments
+sudoku.exe -n 5 -r 30~20
+sudoku.exe -n 5 -r 10~15
+sudoku.exe -n 5 -r 20~70
+sudoku.exe -n 5 -r 15
+sudoku.exe -n 5 -m 5
+sudoku.exe -n 5 -m 2 -u
+sudoku.exe -n 5 -r 20~30 -m 1
+sudoku.exe -n 5 -r 20~30 -u
+sudoku.exe -m 1
+sudoku.exe -r 20~30
+sudoku.exe -u
+sudoku.exe -u -n 5
+sudoku.exe -n 5 -s games_u1.txt
+sudoku.exe -n 5 -r 10~20 -s games_u1.txt
+sudoku.exe -n 5 -s games_u1.txt -u
+sudoku.exe -n 5 -m 1 -s games_u1.txt
+
+解题部分：
+//不存在文件
+sudoku.exe -s games22.txt
+//单题单解
+sudoku.exe -s games_u1.txt
+//多题单解
+sudoku.exe -s games_u2.txt
+//有题无解
+sudoku.exe -s games1.txt
+//多题多解+输入异常
+sudoku.exe -s games2.txt
+//输入异常
+sudoku.exe -s games3.txt
+//更多题
+sudoku.exe -s games4.txt
+sudoku.exe -s games5.txt
+sudoku.exe -s games6.txt
+sudoku.exe -s games7.txt
+
+
