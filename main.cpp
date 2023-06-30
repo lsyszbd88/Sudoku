@@ -13,31 +13,8 @@ using namespace std;
 const int SIZE = 9;
 const int EMPTY = 0;
 const char EMPTY_CHAR = '$';
-
-/*
-// 求解数独问题
-bool solveSudoku(std::vector<std::vector<int>>& board) {
-    for (int row = 0; row < SIZE; ++row) {
-        for (int col = 0; col < SIZE; ++col) {
-            if (board[row][col] == EMPTY) {
-                for (int num = 1; num <= SIZE; ++num) {
-                    if (isValid(board, row, col, num)) {
-                        board[row][col] = num;
-                        if (solveSudoku(board)) {
-                            return true;
-                        }
-                        board[row][col] = EMPTY;
-                    }
-                }
-                return false;
-            }
-        }
-    }
-    return true;
-}
-*/
 FILE* answer;
-bool isPlace(int count, std::vector<std::vector<int>>& board)
+bool isPlace(int count, const std::vector<std::vector<int>>& board)
 {
     int row = count / 9;
     int col = count % 9;
@@ -83,29 +60,27 @@ void backtrace(int count, long& resultcount, std::vector<std::vector<int>>& boar
     }
     int row = count / 9;
     int col = count % 9;
-    if (board[row][col] ==0)
+    if (board[row][col] == 0)
     {
         for (int i = 1; i <= 9; i++)
         {
             board[row][col] = i + 0;
             if (isPlace(count, board))
             {
-                backtrace(count + 1, resultcount, board);//进入下一层
+                backtrace(count + 1, resultcount, board);
             }
 
         }
-        board[row][col] = 0;//回溯
+        board[row][col] = 0;
     }
     else
         backtrace(count + 1, resultcount, board);
 }
 // 求解数独问题
 int solveSudoku(std::vector<std::vector<int>>& board) {
-   
-    // solve sudoku
+
     long resultcount = 0;
     backtrace(0, resultcount, board);
-    //resultfile.close();
     return resultcount;
 }
 
@@ -116,14 +91,12 @@ void generateSudoku(std::string filename, int count) {
         std::cout << "Error opening file: " << filename << std::endl;
         return;
     }
-
     std::random_device rd;
     std::mt19937 gen(rd());
 
     for (int i = 0; i < count; ++i) {
         std::vector<std::vector<int>> board(SIZE, std::vector<int>(SIZE, EMPTY));
 
-        // 随机打乱第一行
         std::vector<int> firstRow(SIZE);
         for (int j = 0; j < SIZE; ++j) {
             firstRow[j] = j + 1;
@@ -144,7 +117,7 @@ void generateSudoku(std::string filename, int count) {
         std::shuffle(board.begin() + 3, board.begin() + 6, gen);
         std::shuffle(board.begin() + 6, board.end(), gen);
 
-        // 打印数独终局到文件
+        // 输出数独终局到文件
         for (int row = 0; row < SIZE; ++row) {
             for (int col = 0; col < SIZE; ++col) {
                 file << board[row][col] << " ";
@@ -158,18 +131,15 @@ void generateSudoku(std::string filename, int count) {
 }
 
 bool hasUniqueSolution(const std::vector<std::vector<int>>& board) {
-    // 创建一个副本
     std::vector<std::vector<int>> gameCopy = board;
-
-    // 使用回溯算法求解数独
     if (solveSudoku(gameCopy) == 1)
         return true;
     return false;
 }
 
 void generateUniqueSudoku(std::string filename, int gameCount) {
-    std::ofstream file(filename);
-    if (!file.is_open()) {
+    std::ofstream file1(filename);
+    if (!file1.is_open()) {
         std::cout << "Error opening file: " << filename << std::endl;
         return;
     }
@@ -178,7 +148,6 @@ void generateUniqueSudoku(std::string filename, int gameCount) {
     std::mt19937 gen(rd());
 
     // 根据难度和空格数量限制计算空格数量
-
     for (int i = 0; i < gameCount; ++i) {
         int emptyCount = std::uniform_int_distribution<>(20, 55)(gen);
         std::vector<std::vector<int>> solution(SIZE, std::vector<int>(SIZE, EMPTY));
@@ -190,24 +159,23 @@ void generateUniqueSudoku(std::string filename, int gameCount) {
         // 读取数独终局
         std::ifstream solutionFile("temp_solution.txt");
         if (!solutionFile.is_open()) {
-            std::cout << "Error opening solution file." << std::endl;
-            file.close();
+            std::cout << "Error opening file:" << "temp_solution.txt" << std::endl;
+            file1.close();
             return;
         }
-
         // 解析数独终局
         std::string line;
-        int row = 0;
+        int row1 = 0;
         while (std::getline(solutionFile, line)) {
             std::stringstream ss(line);
             int num;
             int col = 0;
             while (ss >> num) {
-                solution[row][col] = num;
-                game[row][col] = num;
+                solution[row1][col] = num;
+                game[row1][col] = num;
                 col++;
             }
-            row++;
+            row1++;
         }
 
         solutionFile.close();
@@ -220,17 +188,15 @@ void generateUniqueSudoku(std::string filename, int gameCount) {
                 // 暂时移除数字
                 int temp = game[row][col];
                 game[row][col] = EMPTY;
-
                 // 检查是否有唯一解
                 if (!hasUniqueSolution(game)) {
-                    // 不唯一解，恢复数字
                     game[row][col] = temp;
                     continue;
                 }
                 emptyCount--;
             }
             else {
-                continue; // 当前格子已经为空，继续选择新的格子
+                continue;
             }
         }
 
@@ -241,7 +207,7 @@ void generateUniqueSudoku(std::string filename, int gameCount) {
             return;
         }
 
-        // 打印数独游戏到文件
+        // 输出数独游戏到文件
         for (int row = 0; row < SIZE; ++row) {
             for (int col = 0; col < SIZE; ++col) {
                 if (game[row][col] == EMPTY) {
@@ -258,29 +224,29 @@ void generateUniqueSudoku(std::string filename, int gameCount) {
         file.close();
     }
 
-    file.close();
+    file1.close();
 }
 
 
 // 生成数独游戏
 void generateSudokuGames(std::string filename, int gameCount, int minHoles, int maxHoles, int difficulty) {
-    std::ofstream file(filename);
-    if (!file.is_open()) {
+    std::ofstream file1(filename);
+    if (!file1.is_open()) {
         std::cout << "Error opening file: " << filename << std::endl;
         return;
     }
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    int emptyCount;
+    //int emptyCount;
     if (difficulty == 0) {
         if (minHoles == 0) {
             minHoles = 20;
             maxHoles = 55;
-            emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
+            //emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
         }
-        else
-            emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
+        /*else
+            emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);*/
     }
     else {
         if (minHoles == 0) {
@@ -290,7 +256,7 @@ void generateSudokuGames(std::string filename, int gameCount, int minHoles, int 
             case 2:minHoles = 35; maxHoles = 49; break;
             case 3:minHoles = 50; maxHoles = 55; break;
             }
-            emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
+            //emptyCount = std::uniform_int_distribution<>(minHoles, maxHoles)(gen);
         }
         else {
             cout << minHoles << endl;
@@ -308,24 +274,24 @@ void generateSudokuGames(std::string filename, int gameCount, int minHoles, int 
         // 读取数独终局
         std::ifstream solutionFile("temp_solution.txt");
         if (!solutionFile.is_open()) {
-            std::cout << "Error opening solution file." << std::endl;
-            file.close();
+            std::cout << "Error opening file:" << "temp_solution.txt" << std::endl;
+            file1.close();
             return;
         }
 
         std::string line;
-        int row = 0;
+        int row1 = 0;
         while (std::getline(solutionFile, line)) {
             std::stringstream ss(line);
             int num;
             int col = 0;
             while (ss >> num) {
-                solution[row][col] = num;
-                game[row][col] = num;
+                solution[row1][col] = num;
+                game[row1][col] = num;
                 col++;
 
             }
-            row++;
+            row1++;
         }
 
         solutionFile.close();
@@ -341,7 +307,7 @@ void generateSudokuGames(std::string filename, int gameCount, int minHoles, int 
                 emptyCount--;
             }
             else {
-                continue; // 当前格子已经为空，继续选择新的格子
+                continue;
             }
         }
 
@@ -369,9 +335,9 @@ void generateSudokuGames(std::string filename, int gameCount, int minHoles, int 
         file.close();
     }
 
-    file.close();
+    file1.close();
 }
-bool checkInput(std::vector<std::vector<int>>& board)
+bool checkInput(const std::vector<std::vector<int>>& board)
 {
     for (int i = 0; i < 9; i++)     //同一行
     {
@@ -386,7 +352,7 @@ bool checkInput(std::vector<std::vector<int>>& board)
             }
         }
     }
-    for (int i = 0; i < 9; i++)     //同一行
+    for (int i = 0; i < 9; i++)     //同一列
     {
         for (int j = 0; j < 9; j++)
         {
@@ -399,7 +365,7 @@ bool checkInput(std::vector<std::vector<int>>& board)
             }
         }
     }
-    for (int i = 0; i < 9; i += 3)     //同一行
+    for (int i = 0; i < 9; i += 3)     //同一宫
     {
         for (int j = 0; j < 9; j += 3)
         {
@@ -429,17 +395,17 @@ void ReadAndSolve(const char* solvefilename) {
     err = fopen_s(&tryopen, solvefilename, "r");
     if (err != 0)
     {
-        printf("The file you want to open doesn't exist\n");
+        cout << "Error opening file: " << solvefilename << endl;
         return;
     }
     ifstream problemfile(solvefilename);
     std::vector<std::vector<int>> game(SIZE, std::vector<int>(SIZE, EMPTY));
-    std::string line;
+    //std::string line;
     if (problemfile)
     {
         int total = 0;
         string str;
-        bool exc = false;
+        //bool exc = false;
         string s;
         while (total < 1000000 && getline(problemfile, str))
         {
@@ -467,13 +433,12 @@ void ReadAndSolve(const char* solvefilename) {
                             bool inputok = checkInput(game);
                             if (inputok)
                             {
-                                cout << "input ok";
                                 long num = solveSudoku(game);
-                                cout << num << "results";
+                                cout << "game" << total << ":" << num << "results" << endl;
                             }
                             else
                             {
-                                cout << "input 重复number";
+                                cout << "game" << total << ":" << "Input duplicate number";
 
                             }
                         }
@@ -492,21 +457,20 @@ void ReadAndSolve(const char* solvefilename) {
     return;
 }
 int main(int argc, char* argv[]) {
-    cout << "Welcome to Sudoku Program! You can input the following cmmmand:" << endl;
-    cout << setw(8) << "argc" << setw(15) << "argv" << setw(25) << "function" << endl;
-    cout << setw(8) << "-c" << setw(15) << "1-1000000" << setw(25) << "生成数独终局" << endl;
-    cout << setw(8) << "-s" << setw(15) << "解题路径" << setw(25) << "求解数独游戏" << endl;
-    cout << setw(8) << "-n" << setw(15) << "1-10000" << setw(25) << "生成数独游戏的数量" << endl;
-    cout << setw(8) << "-m" << setw(15) << "1-3" << setw(25) << "生成数独游戏的难度" << endl;
-    cout << setw(8) << "-r" << setw(15) << "20-55" << setw(25) << "指定数独有戏挖空数" << endl;
-    cout << setw(8) << "-u" << setw(15) << "" << setw(25) << "生成数独游戏的解唯一" << endl;
+
     int sudokuCount = 0;
     int gameCount = 0;
     int minHoles = 0;
     int maxHoles = 0;
     int difficulty = 0;
     char* solvefilename = NULL;
-
+    errno_t err1;
+    err1 = fopen_s(&answer, "sudoku.txt", "w+");
+    if (err1 != 0)
+    {
+        cout << "Error opening file: " << "sudoku.txt" << endl;
+        return 0;
+    }
     bool hasN = false;
     bool hasR = false;
     bool hasM = false;
@@ -525,14 +489,7 @@ int main(int argc, char* argv[]) {
         else if (arg == "-s")
         {
             solvefilename = argv[i + 1];
-            errno_t err;
-            FILE* tryopen;
-            err = fopen_s(&tryopen, solvefilename, "r");
-            if (err != 0)
-            {
-                printf("The file you want to open doesn't exist\n");
-                return 0;
-            }
+
             hasS = true;
 
         }
@@ -559,12 +516,10 @@ int main(int argc, char* argv[]) {
             std::cout << "Error: Invalid arguments." << std::endl;
             return 0;
         }
-        errno_t err1;
-        err1 = fopen_s(&answer, "sudoku.txt", "w+");
         ReadAndSolve(solvefilename);
     }
     else if (gameCount > 0) {
-        cout << hasN << hasR << hasM << hasU;
+        //cout << hasN << hasR << hasM << hasU;
         if (!hasN || (hasR && hasM) || (hasR && hasU) || (hasU && hasM)) {
             std::cout << "Error: Invalid arguments." << std::endl;
             return 0;
@@ -592,7 +547,7 @@ int main(int argc, char* argv[]) {
             generateSudokuGames("games.txt", gameCount, minHoles, maxHoles, difficulty);
     }
     else if (sudokuCount > 0) {
-        cout << hasN << hasR << hasM << hasU;
+        //cout << hasN << hasR << hasM << hasU;
         if (hasN || hasR || hasM || hasU) {
             std::cout << "Error: Invalid arguments." << std::endl;
             return 0;
@@ -603,6 +558,14 @@ int main(int argc, char* argv[]) {
     else {
         std::cout << "Error：Invalid arguments." << std::endl;
     }
-
+    cout << " You can input the following cmmmand:" << endl;
+    cout << setw(8) << "argc" << setw(15) << "argv" << setw(25) << "function" << endl;
+    cout << setw(8) << "-c" << setw(15) << "1-1000000" << setw(25) << "生成数独终局" << endl;
+    cout << setw(8) << "-s" << setw(15) << "解题路径" << setw(25) << "求解数独游戏" << endl;
+    cout << setw(8) << "-n" << setw(15) << "1-10000" << setw(25) << "生成数独游戏的数量" << endl;
+    cout << setw(8) << "-m" << setw(15) << "1-3" << setw(25) << "生成数独游戏的难度" << endl;
+    cout << setw(8) << "-r" << setw(15) << "20-55" << setw(25) << "指定数独有戏挖空数" << endl;
+    cout << setw(8) << "-u" << setw(15) << "" << setw(25) << "生成数独游戏的解唯一" << endl;
     return 0;
 }
+//-s ../x64/Debug/games14.txt
