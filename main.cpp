@@ -130,7 +130,9 @@ void generateSudoku(std::string filename, int count) {
     file.close();
 }
 
-bool hasUniqueSolution(const std::vector<std::vector<int>> board) {
+
+bool hasUniqueSolution(const std::vector<std::vector<int>>& board) {
+
     std::vector<std::vector<int>> gameCopy = board;
     if (solveSudoku(gameCopy) == 1)
         return true;
@@ -196,7 +198,7 @@ void generateUniqueSudoku(std::string filename, int gameCount) {
                 emptyCount--;
             }
             else {
-                continue; 
+                continue;
             }
         }
 
@@ -307,7 +309,8 @@ void generateSudokuGames(std::string filename, int gameCount, int minHoles, int 
                 emptyCount--;
             }
             else {
-                continue; 
+                continue;
+
             }
         }
 
@@ -434,12 +437,11 @@ void ReadAndSolve(const char* solvefilename) {
                             if (inputok)
                             {
                                 long num = solveSudoku(game);
-                                cout << "game"<<total<<":"<<num << "results" << endl;
+                                cout << "game" << total << ":" << num << "results" << endl;
                             }
                             else
                             {
-                                cout << "game" << total << ":"<< "Input duplicate number";
-
+                                cout << "game" << total << ":" << "Input duplicate number";
                             }
                         }
                     }
@@ -489,7 +491,6 @@ int main(int argc, char* argv[]) {
         else if (arg == "-s")
         {
             solvefilename = argv[i + 1];
-            
             hasS = true;
 
         }
@@ -519,7 +520,7 @@ int main(int argc, char* argv[]) {
         ReadAndSolve(solvefilename);
     }
     else if (gameCount > 0) {
-        cout << hasN << hasR << hasM << hasU;
+        //cout << hasN << hasR << hasM << hasU;
         if (!hasN || (hasR && hasM) || (hasR && hasU) || (hasU && hasM)) {
             std::cout << "Error: Invalid arguments." << std::endl;
             return 0;
@@ -547,7 +548,7 @@ int main(int argc, char* argv[]) {
             generateSudokuGames("games.txt", gameCount, minHoles, maxHoles, difficulty);
     }
     else if (sudokuCount > 0) {
-        cout << hasN << hasR << hasM << hasU;
+        //cout << hasN << hasR << hasM << hasU;
         if (hasN || hasR || hasM || hasU) {
             std::cout << "Error: Invalid arguments." << std::endl;
             return 0;
