@@ -130,7 +130,9 @@ void generateSudoku(std::string filename, int count) {
     file.close();
 }
 
+
 bool hasUniqueSolution(const std::vector<std::vector<int>>& board) {
+
     std::vector<std::vector<int>> gameCopy = board;
     if (solveSudoku(gameCopy) == 1)
         return true;
@@ -308,6 +310,7 @@ void generateSudokuGames(std::string filename, int gameCount, int minHoles, int 
             }
             else {
                 continue;
+
             }
         }
 
@@ -439,7 +442,6 @@ void ReadAndSolve(const char* solvefilename) {
                             else
                             {
                                 cout << "game" << total << ":" << "Input duplicate number";
-
                             }
                         }
                     }
@@ -489,7 +491,6 @@ int main(int argc, char* argv[]) {
         else if (arg == "-s")
         {
             solvefilename = argv[i + 1];
-
             hasS = true;
 
         }
@@ -569,3 +570,4 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 //-s ../x64/Debug/games14.txt
+
